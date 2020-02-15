@@ -1,0 +1,13 @@
+{
+    "OU": "WasteManagement",
+    "Office": "1021 Main Street",
+    "City": "Houston",
+    "Company": "Waste Management",
+    "CVSFile": "WasteManagement.csv",
+    "DefaultPassword": "VMware1!",
+    "Domain": "vmwareex.com",
+    "GroupName", "WasteManagementGroup",
+
+    "AADAdminName", "admin@domain.onmicrosoft.com",
+    "AADAdminPassword", "AADPasword"
+}
