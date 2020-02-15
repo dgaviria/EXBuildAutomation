@@ -9,3 +9,6 @@ This script is use to add the M365 licenses to the users.  These licenses are re
 
 ## BuildADUsers.json
 This file is used to hold parameters that are used in the scripts above.
+
+## ForceADSync.ps1
+There are times when you add users that you want to immediately update AzureAD.  This script forces a sync.  This is run on the machine that is hosting AD Connect.
