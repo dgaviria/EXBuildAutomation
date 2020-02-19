@@ -15,38 +15,39 @@ If ($fileExists -ne $true) {
 # Add an OU for the particular customer.  This will allow for less cleanup on the AD side, but moves the issue to getting the connectors correct.
 $ouName = $buildParams.OU
 $company = $buildParams.Company
-$groupName = $buildParamsPath.GroupName
+$groupName = $buildParams.GroupName
 Write-Output $ouName
-$ouPath = "OU=EmpExperience,DC=vmwareex,DC=com"
+Write-Output $groupName
+$ouPath = $buildParams.OUPath
 New-ADOrganizationalUnit -Name $ouName -DisplayName $ouName -City $buildParams.City -ProtectedFromAccidentalDeletion $false -Path $ouPath
 $ouFilter = "(name=" + $ouName + ")"
 $ouInfo = Get-ADOrganizationalUnit -LDAPFilter $ouFilter
 # We need the DN to add the users to the correct OU.
 $ouDistinguishedName = $ouInfo.DistinguishedName
 
-# Create a group that can be used to add users to the UEM Console.
+# Create an AD group that can be used to add users to the UEM Console.
 New-ADGroup -Name $groupName -Path $ouDistinguishedName -GroupCategory Security -GroupScope Global -DisplayName $groupName
 
 # Two step process.  Just add the user in this step and add the manager in the next step.
-$userData = Import-Csv -Path $infilePath -Delimiter "`t"
+$userData = Import-Csv -Path $infilePath
 ForEach ($currentUser in $userData) {
     $firstName = $currentUser.'First Name'
     $lastName = $currentUser.'Last Name'
     $department = $currentUser.Department
     $employeeID = $currentUser.'Employee ID'
-    $mobilePhone = $currentUser.'Mobile Phone'
+    $mobilePhone = $currentUser.'VMware SE Mobile Phone'
     $title = $currentUser.Title
     $manager = $currentUser.'Manager Last Name'
     $displayName = $firstName + " " + $lastName
     $defaultPassword = ConvertTo-SecureString $buildParams.DefaultPassword -AsPlainText -Force 
     $usageLocation = "US"
 
-    $samAccountName = $firstName.ToLower().SubString(0,1) + $lastName.ToLower()
+    $samAccountName = $firstName.ToLower() + "." + $lastName.ToLower()
     $emailAddress = $samAccountName + "@" + $buildParams.Domain
 
-    New-ADUser -City $buildParams.City -Department $department -EmailAddress $emailAddress -EmployeeID $employeeID -Name $displayName -MobilePhone $mobilePhone `
+    New-ADUser -City $buildParams.City -Department $department -EmailAddress $emailAddress -EmployeeID $employeeID -Name $displayName -MobilePhone $mobilePhone -OfficePhone $mobilePhone `
             -Path $ouDistinguishedName -SamAccountName $samAccountName -Title $title -UserPrincipalName $emailAddress -DisplayName $displayName -CannotChangePassword $true `
-            -ChangePasswordAtLogon $false -AccountPassword $defaultPassword -GivenName $firstName -Surname $lastName -Enabled $true -Company $company
+            -PasswordNeverExpires $TRUE -ChangePasswordAtLogon $false -AccountPassword $defaultPassword -GivenName $firstName -Surname $lastName -Enabled $true -Company $company
 
     Set-ADUser $samAccountName -Replace @{c="US";co="UNITED STATES";countrycode=826}
     Add-ADGroupMember -Identity $groupName -Members $samAccountName
